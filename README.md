@@ -21,7 +21,7 @@ Unlike protest projects (like Ageless Linux) that alter your core OS identity or
 It deploys a three-layer defense:
 1. **The Portal Trap:** It aggressively claims the `AgeVerification` portal backend across *all* major desktop environments (GNOME, KDE, Cinnamon, Hyprland, sway, etc.). Any app asking the portal for your age is routed directly to us.
 2. **The D-Bus Shield:** Using raw XML D-Bus policies (`/etc/dbus-1/session.d/`), Mommy Security instructs the Linux message bus itself to immediately reject age queries. The app gets a hard `org.freedesktop.DBus.Error.AccessDenied` before the message even leaves the sandbox. 
-3. **The Scrubber (Nullifier):** A silent background systemd service wakes up daily to scrub any physical `birthDate` fields in `/var/lib/systemd/userdb/` back to the Unix Epoch (`1970-01-01`) and hard-masks the `systemd-userdbd` and `systemd-homed` enforcement sockets.
+3. **The Scrubber (Nullifier):** A silent background systemd service wakes up daily to scrub any physical `birthDate` fields in `/var/lib/systemd/userdb/` back to the Unix Epoch (`1970-01-01`) and hard-masks the `systemd-userdbd` and `systemd-homed` enforcement sockets. *(Note: Masking `systemd-userdbd.socket` actively breaks `userdbctl` and other consumers of the userdb API beyond just age verification. This scorched-earth approach guarantees privacy.)*
 
 ---
 

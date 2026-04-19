@@ -34,9 +34,11 @@ if [ $UNINSTALL -eq 1 ]; then
     
     rm -f /usr/local/bin/mommy-nullify.sh
     rm -f /usr/local/bin/mommyctl
+    rm -f /usr/local/bin/mommy-stub.py
     rm -f /etc/dbus-1/system.d/mommy-security.conf
     rm -f /etc/dbus-1/session.d/mommy-security.conf
     rm -f /usr/share/xdg-desktop-portal/portals/mommy-security.portal
+    rm -f /usr/share/dbus-1/services/org.freedesktop.impl.portal.MommySecurity.service
     
     if command -v systemctl >/dev/null 2>&1; then
         systemctl unmask systemd-userdbd.socket systemd-homed.socket || true
@@ -54,14 +56,24 @@ mkdir -p /etc/dbus-1/session.d
 mkdir -p /usr/share/xdg-desktop-portal/portals
 mkdir -p /usr/local/bin
 
+mkdir -p /usr/share/dbus-1/services
+
 # Copy files
 install -Dm644 policy/mommy-security-system.conf /etc/dbus-1/system.d/mommy-security.conf
 install -Dm644 policy/mommy-security-session.conf /etc/dbus-1/session.d/mommy-security.conf
 install -Dm644 portal/mommy-security.portal /usr/share/xdg-desktop-portal/portals/mommy-security.portal
 install -Dm755 scripts/mommy-nullify.sh /usr/local/bin/mommy-nullify.sh
 install -Dm755 scripts/mommyctl /usr/local/bin/mommyctl
+install -Dm755 scripts/mommy-stub.py /usr/local/bin/mommy-stub.py
 install -Dm644 systemd/mommy-nullify.service /etc/systemd/system/mommy-nullify.service
 install -Dm644 systemd/mommy-nullify.timer /etc/systemd/system/mommy-nullify.timer
+
+# Create D-Bus service file for auto-activation
+cat <<EOF > /usr/share/dbus-1/services/org.freedesktop.impl.portal.MommySecurity.service
+[D-BUS Service]
+Name=org.freedesktop.impl.portal.MommySecurity
+Exec=/usr/local/bin/mommy-stub.py
+EOF
 
 
 

@@ -49,8 +49,8 @@ function check_status() {
 
 function run_test() {
     echo "🛡️ Simulating an app requesting your age bracket over D-Bus..."
+    echo "--- Session Bus (Portal) ---"
     echo "Command: busctl --user call org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.AgeVerification GetAgeBracket"
-    echo ""
     
     # We expect this to fail with AccessDenied. 
     OUTPUT=$(busctl --user call org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.AgeVerification GetAgeBracket 2>&1 || true)
@@ -58,7 +58,7 @@ function run_test() {
     if echo "$OUTPUT" | grep -q "Access denied"; then
         echo "✅ RESULT: BLOCK SUCCESSFUL!"
         echo "Access denied."
-    elif echo "$OUTPUT" | grep -q "UnknownMethod\|ServiceUnknown"; then
+    elif echo "$OUTPUT" | grep -q "UnknownMethod\|ServiceUnknown\|not activatable"; then
         echo "⚠️ RESULT: UNKNOWN."
         echo "The system returned: $OUTPUT"
         echo "The D-Bus policy may not be installed, or you need to restart your session."
@@ -66,6 +66,22 @@ function run_test() {
         echo "❌ RESULT: SHIELD FAILURE OR UNEXPECTED STATE."
         echo "Output was: $OUTPUT"
         echo "Make sure you have run sudo ./install.sh"
+    fi
+
+    echo ""
+    echo "--- System Bus (AgeVerification1) ---"
+    echo "Command: busctl --system call org.freedesktop.AgeVerification1 /org/freedesktop/AgeVerification1 org.freedesktop.AgeVerification1 GetAgeBracket"
+    SYS_OUTPUT=$(busctl --system call org.freedesktop.AgeVerification1 /org/freedesktop/AgeVerification1 org.freedesktop.AgeVerification1 GetAgeBracket 2>&1 || true)
+
+    if echo "$SYS_OUTPUT" | grep -q "Access denied"; then
+        echo "✅ RESULT: BLOCK SUCCESSFUL!"
+        echo "Access denied by D-Bus policy."
+    elif echo "$SYS_OUTPUT" | grep -q "ServiceUnknown\|not activatable"; then
+        echo "✅ RESULT: INTERFACE NOT PRESENT ON THIS SYSTEM (Safe)"
+        echo "The OS does not implement the system-level age verifier natively. You are safe."
+    else
+        echo "❌ RESULT: SHIELD FAILURE OR UNEXPECTED STATE."
+        echo "Output was: $SYS_OUTPUT"
     fi
 }
 
