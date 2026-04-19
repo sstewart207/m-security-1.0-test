@@ -1,0 +1,11 @@
+[Unit]
+Description=Mommy Security v1.0 Nullifier Timer
+Documentation=https://github.com/mommy-security/mommy-security
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=24h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,8 @@
+# Mommy Security v1.0 - Warmth & Protection For Your OS
+# Portal Backend Registration: Claims the AgeVerification portal interface 
+# across all desktops so it can be hard-blocked.
+
+[portal]
+DBusName=org.freedesktop.impl.portal.MommySecurity
+Interfaces=org.freedesktop.impl.portal.AgeVerification;org.freedesktop.AgeVerification1;org.freedesktop.impl.portal.ParentalControls
+UseIn=Cinnamon;GNOME;KDE;XFCE;sway;Hyprland;LXQt;MATE;wlroots;Unity;Pantheon

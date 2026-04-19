@@ -1,0 +1,95 @@
+#!/bin/bash
+# Mommy Security v1.0 - Warmth & Protection For Your OS
+# mommyctl - The control interface for your OS protection shield.
+
+set -e
+
+function show_help() {
+    echo "Mommy Security v1.0 🐾🖤💖"
+    echo "Usage: mommyctl [COMMAND]"
+    echo ""
+    echo "Commands:"
+    echo "  status   Check if the Mommy Security shields are active"
+    echo "  test     Simulate an app querying your age to verify the hard-block"
+    echo "  scrub    Manually trigger the userdb birthDate scrubber (requires sudo)"
+    echo "  help     Show this message"
+}
+
+function check_status() {
+    echo "🔍 Checking Mommy Security shields..."
+    echo ""
+
+    # Check D-Bus Policies
+    if [ -f "/etc/dbus-1/system.d/mommy-security.conf" ] && [ -f "/etc/dbus-1/session.d/mommy-security.conf" ]; then
+        echo "✅ [D-Bus] Hard-block policies are INSTALLED"
+    else
+        echo "❌ [D-Bus] Hard-block policies are MISSING"
+    fi
+    
+    # Check systemd status if present
+    if command -v systemctl >/dev/null 2>&1; then
+        if systemctl is-active --quiet mommy-nullify.timer; then
+            echo "✅ [Timer] Nullifier timer is ACTIVE"
+        else
+            echo "❌ [Timer] Nullifier timer is INACTIVE"
+        fi
+        
+        if systemctl is-enabled systemd-userdbd.socket 2>/dev/null | grep -q "masked"; then
+            echo "✅ [Systemd] Enforcement sockets are MASKED"
+        else
+            echo "⚠️  [Systemd] Enforcement sockets are NOT masked"
+        fi
+    else
+        echo "✅ [Systemd] Non-systemd distro detected. Scrubber services skipped natively."
+    fi
+
+    echo ""
+    echo "Run 'mommyctl test' to verify the D-Bus shield in real-time."
+}
+
+function run_test() {
+    echo "🛡️ Simulating an app requesting your age bracket over D-Bus..."
+    echo "Command: busctl --user call org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.AgeVerification GetAgeBracket"
+    echo ""
+    
+    # We expect this to fail with AccessDenied. 
+    OUTPUT=$(busctl --user call org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.AgeVerification GetAgeBracket 2>&1 || true)
+    
+    if echo "$OUTPUT" | grep -q "Access denied"; then
+        echo "✅ RESULT: BLOCK SUCCESSFUL!"
+        echo "Access denied."
+    elif echo "$OUTPUT" | grep -q "UnknownMethod\|ServiceUnknown"; then
+        echo "⚠️ RESULT: UNKNOWN."
+        echo "The system returned: $OUTPUT"
+        echo "The D-Bus policy may not be installed, or you need to restart your session."
+    else
+        echo "❌ RESULT: SHIELD FAILURE OR UNEXPECTED STATE."
+        echo "Output was: $OUTPUT"
+        echo "Make sure you have run sudo ./install.sh"
+    fi
+}
+
+function run_scrub() {
+    if [ "$EUID" -ne 0 ]; then
+        echo "❌ Please run 'sudo mommyctl scrub' to scrub system databases."
+        exit 1
+    fi
+    echo "🧹 Running Mommy Nullifier..."
+    /usr/local/bin/mommy-nullify.sh
+    echo "Done."
+}
+
+case "${1:-}" in
+    status)
+        check_status
+        ;;
+    test)
+        run_test
+        ;;
+    scrub)
+        run_scrub
+        ;;
+    help|*)
+        show_help
+        ;;
+esac
